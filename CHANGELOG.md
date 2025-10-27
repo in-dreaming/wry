@@ -1,5 +1,9 @@
 # Changelog
 
+## \[0.54.0]
+
+- [`27ba73f`](https://github.com/tauri-apps/wry/commit/27ba73f07720b80a21b6b876f1229cad8871aa33) Add handler for web content process termination.
+
 ## \[0.53.5]
 
 - [#1622](https://github.com/tauri-apps/wry/pull/1626) Fixed an issue that caused docs.rs builds to fail. No user facing changes.
