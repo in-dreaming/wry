@@ -109,6 +109,10 @@ fn main() {
       || target.contains("openbsd"));
   alias("linux", linux);
   alias("gtk", cfg!(feature = "os-webview") && linux);
+
+  // C ABI 模块已在代码中实现
+  // 头文件 wry.h 需要手动创建或使用 cbindgen CLI 生成
+  // 运行: cbindgen --config cbindgen.toml --crate src/cabi -o include/wry.h
 }
 
 fn alias(alias: &str, condition: bool) {

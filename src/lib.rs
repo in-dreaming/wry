@@ -353,6 +353,9 @@ mod proxy;
 mod util;
 mod web_context;
 
+#[cfg(feature = "cabi")]
+pub mod cabi;
+
 #[cfg(target_os = "android")]
 pub(crate) mod android;
 #[cfg(target_os = "android")]

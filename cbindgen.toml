@@ -1,0 +1,63 @@
+# cbindgen 配置文件
+
+language = "C"
+include_guard = "WRY_H"
+include_version = true
+tab_width = 2
+
+# 头文件顶部注释
+header = """
+/* C API for Wry WebView library
+ * 
+ * This file is auto-generated. Do not modify manually.
+ * Generated from Rust source with cbindgen.
+ */
+
+#ifndef WRY_H
+#define WRY_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+"""
+
+# 头文件底部
+trailer = """
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* WRY_H */
+"""
+
+# 导出宏
+include = ["src/cabi/**/*.rs"]
+exclude = ["**/test*", "**/tests"]
+
+# 函数导出
+[export]
+exclude = ["tests"]
+prefix = "wry_"
+
+# 枚举导出
+[enum]
+rename_variant = "PascalCase"
+exclude = ["tests"]
+
+# 结构体导出
+[struct]
+pack = 1
+exclude = ["tests"]
+
+# 类型重命名
+[rename]
+"A" = "A"
+"WryErrorCode" = "ErrorCode"
+"WryResult" = "Result"
+
+# 文档
+style = "Both"
+line_length = 100
+documentation_style = "C"
+
+
