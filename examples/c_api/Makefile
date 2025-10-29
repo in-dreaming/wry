@@ -8,7 +8,7 @@ LIBDIR = ../../target/release
 LIBS = -lwry
 
 # 目标文件
-EXAMPLES = simple ipc_example custom_protocol full_features
+EXAMPLES = simple ipc_example custom_protocol full_features multiwebview_urls
 
 # 默认目标
 all: $(EXAMPLES)

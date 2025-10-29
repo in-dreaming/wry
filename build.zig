@@ -127,6 +127,21 @@ pub fn build(b: *std.Build) void {
         if (dll_install_step) |s| multiwebview_exe.step.dependOn(s);
         b.installArtifact(multiwebview_exe);
 
+        // multiwebview_urls.c 示例 (加载真实网站)
+        const multiwebview_urls_exe = b.addExecutable(.{
+            .name = "multiwebview_urls",
+            .target = target,
+            .optimize = optimize,
+        });
+        multiwebview_urls_exe.addCSourceFile(.{ .file = .{ .cwd_relative = "examples/c_api/multiwebview_urls.c" }, .flags = &.{ "-std=c11", "-Wall", "-Wextra" } });
+        multiwebview_urls_exe.linkLibC();
+        multiwebview_urls_exe.addIncludePath(.{ .cwd_relative = "include" });
+        multiwebview_urls_exe.addLibraryPath(.{ .cwd_relative = "target/debug" });
+        multiwebview_urls_exe.linkSystemLibrary("wry");
+        multiwebview_urls_exe.step.dependOn(&build_rust_dep.step);
+        if (dll_install_step) |s| multiwebview_urls_exe.step.dependOn(s);
+        b.installArtifact(multiwebview_urls_exe);
+
         // 添加构建示例的步骤
         const examples_step = b.step("build-examples", "Build C API examples");
         examples_step.dependOn(&simple_exe.step);
@@ -134,6 +149,7 @@ pub fn build(b: *std.Build) void {
         examples_step.dependOn(&protocol_exe.step);
         examples_step.dependOn(&full_exe.step);
         examples_step.dependOn(&multiwebview_exe.step);
+        examples_step.dependOn(&multiwebview_urls_exe.step);
 
         // 运行示例的步骤
         const run_simple = b.addRunArtifact(simple_exe);
@@ -141,6 +157,7 @@ pub fn build(b: *std.Build) void {
         const run_protocol = b.addRunArtifact(protocol_exe);
         const run_full = b.addRunArtifact(full_exe);
         const run_multiwebview = b.addRunArtifact(multiwebview_exe);
+        const run_multiwebview_urls = b.addRunArtifact(multiwebview_urls_exe);
 
         const run_step = b.step("run", "Run examples");
         run_step.dependOn(&run_simple.step);
@@ -148,6 +165,7 @@ pub fn build(b: *std.Build) void {
         run_step.dependOn(&run_protocol.step);
         run_step.dependOn(&run_full.step);
         run_step.dependOn(&run_multiwebview.step);
+        run_step.dependOn(&run_multiwebview_urls.step);
     }
 
     // ========== 测试步骤 ==========
