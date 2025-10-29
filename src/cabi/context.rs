@@ -43,7 +43,7 @@ pub extern "C" fn wry_context_set_allows_automation(
     flag: c_int,
 ) -> WryResult {
     if context.is_null() {
-        set_error_message("Context is null");
+        set_error_message("context pointer is null");
         return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
     }
     
@@ -60,7 +60,10 @@ pub extern "C" fn wry_context_is_protocol_registered(
     context: *const WryWebContext,
     name: *const c_char,
 ) -> c_int {
-    if context.is_null() || name.is_null() {
+    if context.is_null() {
+        return 0;
+    }
+    if name.is_null() {
         return 0;
     }
     

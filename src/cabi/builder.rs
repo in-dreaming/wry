@@ -42,14 +42,17 @@ pub extern "C" fn wry_builder_with_url(
     builder: WryWebViewBuilder,
     url: *const c_char,
 ) -> WryResult {
-    if builder.is_null() || url.is_null() {
-        set_error_message("Invalid argument");
+    if builder.is_null() {
+        set_error_message("builder pointer is null");
+        return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
+    }
+    if url.is_null() {
+        set_error_message("url pointer is null");
         return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
     }
     
     unsafe {
         let url_str = CStr::from_ptr(url).to_string_lossy();
-        // Read the builder, modify it, and write it back
         let builder_val = std::ptr::read(builder);
         let updated_builder = builder_val.with_url(url_str.as_ref());
         std::ptr::write(builder, updated_builder);
@@ -64,8 +67,12 @@ pub extern "C" fn wry_builder_with_html(
     builder: WryWebViewBuilder,
     html: *const c_char,
 ) -> WryResult {
-    if builder.is_null() || html.is_null() {
-        set_error_message("Invalid argument");
+    if builder.is_null() {
+        set_error_message("builder pointer is null");
+        return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
+    }
+    if html.is_null() {
+        set_error_message("html pointer is null");
         return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
     }
     
@@ -86,7 +93,7 @@ pub extern "C" fn wry_builder_with_transparent(
     transparent: c_int,
 ) -> WryResult {
     if builder.is_null() {
-        set_error_message("Invalid argument");
+        set_error_message("builder pointer is null");
         return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
     }
     
@@ -106,7 +113,7 @@ pub extern "C" fn wry_builder_with_visible(
     visible: c_int,
 ) -> WryResult {
     if builder.is_null() {
-        set_error_message("Invalid argument");
+        set_error_message("builder pointer is null");
         return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
     }
     
@@ -126,7 +133,7 @@ pub extern "C" fn wry_builder_with_devtools(
     devtools: c_int,
 ) -> WryResult {
     if builder.is_null() {
-        set_error_message("Invalid argument");
+        set_error_message("builder pointer is null");
         return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
     }
     
@@ -145,8 +152,12 @@ pub extern "C" fn wry_builder_with_user_agent(
     builder: WryWebViewBuilder,
     user_agent: *const c_char,
 ) -> WryResult {
-    if builder.is_null() || user_agent.is_null() {
-        set_error_message("Invalid argument");
+    if builder.is_null() {
+        set_error_message("builder pointer is null");
+        return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
+    }
+    if user_agent.is_null() {
+        set_error_message("user_agent pointer is null");
         return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
     }
     
@@ -161,6 +172,7 @@ pub extern "C" fn wry_builder_with_user_agent(
 }
 
 /// C API: 设置 IPC 处理器
+/// @note userdata 指针必须在 WebView 销毁前保持有效
 #[no_mangle]
 pub extern "C" fn wry_builder_with_ipc_handler(
     builder: WryWebViewBuilder,
@@ -168,7 +180,11 @@ pub extern "C" fn wry_builder_with_ipc_handler(
     userdata: *mut c_void,
 ) -> WryResult {
     if builder.is_null() {
-        set_error_message("Invalid argument");
+        set_error_message("builder pointer is null");
+        return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
+    }
+    if (callback as *const c_void).is_null() {
+        set_error_message("callback function pointer is null");
         return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
     }
     
@@ -185,6 +201,7 @@ pub extern "C" fn wry_builder_with_ipc_handler(
 }
 
 /// C API: 设置导航处理器
+/// @note userdata 指针必须在 WebView 销毁前保持有效
 #[no_mangle]
 pub extern "C" fn wry_builder_with_navigation_handler(
     builder: WryWebViewBuilder,
@@ -192,7 +209,11 @@ pub extern "C" fn wry_builder_with_navigation_handler(
     userdata: *mut c_void,
 ) -> WryResult {
     if builder.is_null() {
-        set_error_message("Invalid argument");
+        set_error_message("builder pointer is null");
+        return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
+    }
+    if (callback as *const c_void).is_null() {
+        set_error_message("callback function pointer is null");
         return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
     }
     
@@ -218,16 +239,16 @@ pub extern "C" fn wry_builder_with_bounds(
     height: f64,
 ) -> WryResult {
     if builder.is_null() {
-        set_error_message("Invalid argument");
+        set_error_message("builder pointer is null");
         return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
     }
     
     unsafe {
-        let builder_val = std::ptr::read(builder);
         let bounds = crate::Rect {
             position: crate::dpi::LogicalPosition::new(x, y).into(),
             size: crate::dpi::LogicalSize::new(width, height).into(),
         };
+        let builder_val = std::ptr::read(builder);
         let updated_builder = builder_val.with_bounds(bounds);
         std::ptr::write(builder, updated_builder);
     }
@@ -251,7 +272,7 @@ impl raw_window_handle::HasWindowHandle for WindowHandleWrapper {
 }
 
 /// C API: 构建 WebView 作为子窗口
-/// @param builder WebViewBuilder 指针
+/// @param builder WebViewBuilder 指针（消费 builder）
 /// @param parent_hwnd 父窗口句柄（HWND on Windows, GtkWidget* on Linux, NSView* on macOS）
 /// @return WebView 指针，失败返回 NULL
 #[no_mangle]
@@ -259,8 +280,12 @@ pub extern "C" fn wry_builder_build_as_child(
     builder: WryWebViewBuilder,
     parent_hwnd: *mut std::os::raw::c_void,
 ) -> WryWebView {
-    if builder.is_null() || parent_hwnd.is_null() {
-        set_error_message("Invalid argument");
+    if builder.is_null() {
+        set_error_message("builder pointer is null");
+        return std::ptr::null_mut();
+    }
+    if parent_hwnd.is_null() {
+        set_error_message("parent_hwnd pointer is null");
         return std::ptr::null_mut();
     }
     

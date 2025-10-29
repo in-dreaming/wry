@@ -18,14 +18,23 @@ pub struct WryCookie {
 }
 
 /// C API: 获取所有 cookies
+/// @note 调用者必须调用 wry_cookies_free() 释放返回的 cookies 数组
 #[no_mangle]
 pub extern "C" fn wry_webview_cookies(
     webview: *const WryWebView,
     out_cookies: *mut *mut WryCookie,
     out_count: *mut usize,
 ) -> WryResult {
-    if webview.is_null() || out_cookies.is_null() || out_count.is_null() {
-        set_error_message("Invalid argument");
+    if webview.is_null() {
+        set_error_message("webview pointer is null");
+        return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
+    }
+    if out_cookies.is_null() {
+        set_error_message("out_cookies pointer is null");
+        return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
+    }
+    if out_count.is_null() {
+        set_error_message("out_count pointer is null");
         return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
     }
     
@@ -92,8 +101,16 @@ pub extern "C" fn wry_webview_set_cookie(
     domain: *const std::os::raw::c_char,
     path: *const std::os::raw::c_char,
 ) -> WryResult {
-    if webview.is_null() || name.is_null() || value.is_null() {
-        set_error_message("Invalid argument");
+    if webview.is_null() {
+        set_error_message("webview pointer is null");
+        return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
+    }
+    if name.is_null() {
+        set_error_message("name pointer is null");
+        return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
+    }
+    if value.is_null() {
+        set_error_message("value pointer is null");
         return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
     }
     
@@ -140,8 +157,12 @@ pub extern "C" fn wry_webview_delete_cookie(
     webview: WryWebView,
     name: *const std::os::raw::c_char,
 ) -> WryResult {
-    if webview.is_null() || name.is_null() {
-        set_error_message("Invalid argument");
+    if webview.is_null() {
+        set_error_message("webview pointer is null");
+        return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
+    }
+    if name.is_null() {
+        set_error_message("name pointer is null");
         return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
     }
     

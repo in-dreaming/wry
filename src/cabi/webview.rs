@@ -51,18 +51,29 @@ pub extern "C" fn wry_webview_id(
 /// C API: 获取当前 URL
 #[no_mangle]
 pub extern "C" fn wry_webview_url(webview: *const WryWebView, out_url: *mut *mut c_char) -> WryResult {
-    if webview.is_null() || out_url.is_null() {
-        set_error_message("Invalid argument");
+    if webview.is_null() {
+        set_error_message("webview pointer is null");
+        return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
+    }
+    if out_url.is_null() {
+        set_error_message("out_url pointer is null");
         return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
     }
     
     unsafe {
-        let webview_ptr = webview.as_ref().unwrap();
-        let webview_ref = webview_ptr.as_ref().unwrap();
+        let webview_ref = &**webview;
         match webview_ref.url() {
             Ok(url) => {
-                *out_url = std::ffi::CString::new(url).unwrap().into_raw();
-                WryErrorCode::WRY_OK
+                match std::ffi::CString::new(url) {
+                    Ok(c_str) => {
+                        *out_url = c_str.into_raw();
+                        WryErrorCode::WRY_OK
+                    }
+                    Err(_) => {
+                        set_error_message("Failed to convert URL to C string");
+                        WryErrorCode::WRY_ERROR_GENERIC
+                    }
+                }
             }
             Err(err) => {
                 set_last_error(err);
@@ -78,15 +89,18 @@ pub extern "C" fn wry_webview_eval(
     webview: *mut WryWebView,
     js: *const c_char,
 ) -> WryResult {
-    if webview.is_null() || js.is_null() {
-        set_error_message("Invalid argument");
+    if webview.is_null() {
+        set_error_message("webview pointer is null");
+        return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
+    }
+    if js.is_null() {
+        set_error_message("js pointer is null");
         return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
     }
     
     unsafe {
         let js_str = CStr::from_ptr(js).to_string_lossy();
-        let webview_ptr = webview.as_ref().unwrap();
-        let webview_ref = webview_ptr.as_ref().unwrap();
+        let webview_ref = &**webview;
         check_result(webview_ref.evaluate_script(&js_str))
     }
 }
@@ -97,15 +111,18 @@ pub extern "C" fn wry_webview_load_url(
     webview: *mut WryWebView,
     url: *const c_char,
 ) -> WryResult {
-    if webview.is_null() || url.is_null() {
-        set_error_message("Invalid argument");
+    if webview.is_null() {
+        set_error_message("webview pointer is null");
+        return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
+    }
+    if url.is_null() {
+        set_error_message("url pointer is null");
         return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
     }
     
     unsafe {
         let url_str = CStr::from_ptr(url).to_string_lossy();
-        let webview_ptr = webview.as_ref().unwrap();
-        let webview_ref = webview_ptr.as_ref().unwrap();
+        let webview_ref = &**webview;
         check_result(webview_ref.load_url(&url_str))
     }
 }
@@ -116,15 +133,18 @@ pub extern "C" fn wry_webview_load_html(
     webview: *mut WryWebView,
     html: *const c_char,
 ) -> WryResult {
-    if webview.is_null() || html.is_null() {
-        set_error_message("Invalid argument");
+    if webview.is_null() {
+        set_error_message("webview pointer is null");
+        return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
+    }
+    if html.is_null() {
+        set_error_message("html pointer is null");
         return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
     }
     
     unsafe {
         let html_str = CStr::from_ptr(html).to_string_lossy();
-        let webview_ptr = webview.as_ref().unwrap();
-        let webview_ref = webview_ptr.as_ref().unwrap();
+        let webview_ref = &**webview;
         check_result(webview_ref.load_html(&html_str))
     }
 }
@@ -133,13 +153,12 @@ pub extern "C" fn wry_webview_load_html(
 #[no_mangle]
 pub extern "C" fn wry_webview_reload(webview: *mut WryWebView) -> WryResult {
     if webview.is_null() {
-        set_error_message("Invalid argument");
+        set_error_message("webview pointer is null");
         return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
     }
     
     unsafe {
-        let webview_ptr = webview.as_ref().unwrap();
-        let webview_ref = webview_ptr.as_ref().unwrap();
+        let webview_ref = &**webview;
         check_result(webview_ref.reload())
     }
 }
@@ -148,13 +167,12 @@ pub extern "C" fn wry_webview_reload(webview: *mut WryWebView) -> WryResult {
 #[no_mangle]
 pub extern "C" fn wry_webview_print(webview: *mut WryWebView) -> WryResult {
     if webview.is_null() {
-        set_error_message("Invalid argument");
+        set_error_message("webview pointer is null");
         return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
     }
     
     unsafe {
-        let webview_ptr = webview.as_ref().unwrap();
-        let webview_ref = webview_ptr.as_ref().unwrap();
+        let webview_ref = &**webview;
         check_result(webview_ref.print())
     }
 }
@@ -166,13 +184,12 @@ pub extern "C" fn wry_webview_zoom(
     scale: c_double,
 ) -> WryResult {
     if webview.is_null() {
-        set_error_message("Invalid argument");
+        set_error_message("webview pointer is null");
         return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
     }
     
     unsafe {
-        let webview_ptr = webview.as_ref().unwrap();
-        let webview_ref = webview_ptr.as_ref().unwrap();
+        let webview_ref = &**webview;
         check_result(webview_ref.zoom(scale))
     }
 }
@@ -184,13 +201,12 @@ pub extern "C" fn wry_webview_set_visible(
     visible: c_int,
 ) -> WryResult {
     if webview.is_null() {
-        set_error_message("Invalid argument");
+        set_error_message("webview pointer is null");
         return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
     }
     
     unsafe {
-        let webview_ptr = webview.as_ref().unwrap();
-        let webview_ref = webview_ptr.as_ref().unwrap();
+        let webview_ref = &**webview;
         check_result(webview_ref.set_visible(visible != 0))
     }
 }
@@ -199,13 +215,12 @@ pub extern "C" fn wry_webview_set_visible(
 #[no_mangle]
 pub extern "C" fn wry_webview_focus(webview: *mut WryWebView) -> WryResult {
     if webview.is_null() {
-        set_error_message("Invalid argument");
+        set_error_message("webview pointer is null");
         return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
     }
     
     unsafe {
-        let webview_ptr = webview.as_ref().unwrap();
-        let webview_ref = webview_ptr.as_ref().unwrap();
+        let webview_ref = &**webview;
         check_result(webview_ref.focus())
     }
 }
@@ -215,11 +230,8 @@ pub extern "C" fn wry_webview_focus(webview: *mut WryWebView) -> WryResult {
 pub extern "C" fn wry_webview_open_devtools(webview: *mut WryWebView) {
     if !webview.is_null() {
         unsafe {
-            if let Some(webview_ptr) = webview.as_ref() {
-                if let Some(webview_ref) = webview_ptr.as_ref() {
-                    webview_ref.open_devtools();
-                }
-            }
+            let webview_ref = &**webview;
+            webview_ref.open_devtools();
         }
     }
 }
@@ -229,11 +241,8 @@ pub extern "C" fn wry_webview_open_devtools(webview: *mut WryWebView) {
 pub extern "C" fn wry_webview_close_devtools(webview: *mut WryWebView) {
     if !webview.is_null() {
         unsafe {
-            if let Some(webview_ptr) = webview.as_ref() {
-                if let Some(webview_ref) = webview_ptr.as_ref() {
-                    webview_ref.close_devtools();
-                }
-            }
+            let webview_ref = &**webview;
+            webview_ref.close_devtools();
         }
     }
 }
@@ -246,15 +255,8 @@ pub extern "C" fn wry_webview_is_devtools_open(webview: *const WryWebView) -> c_
     }
     
     unsafe {
-        if let Some(webview_ptr) = webview.as_ref() {
-            if let Some(webview_ref) = webview_ptr.as_ref() {
-                webview_ref.is_devtools_open() as c_int
-            } else {
-                0
-            }
-        } else {
-            0
-        }
+        let webview_ref = &**webview;
+        webview_ref.is_devtools_open() as c_int
     }
 }
 
