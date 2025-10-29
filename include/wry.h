@@ -221,7 +221,7 @@ WryResult wry_webview_id(const WryWebView* webview, char* out_id, size_t len);
 /**
  * 获取当前 URL
  */
-WryResult wry_webview_url(const WryWebView* webview, char** out_url);
+WryResult wry_webview_url(WryWebView* webview, char** out_url);
 
 /**
  * 执行 JavaScript 代码
@@ -277,13 +277,96 @@ void wry_webview_close_devtools(WryWebView* webview);
  * 检查开发者工具是否打开
  * @return 如果打开返回非 0，否则返回 0
  */
-int wry_webview_is_devtools_open(const WryWebView* webview);
+int wry_webview_is_devtools_open(WryWebView* webview);
+
+/**
+ * 获取 WebView 边界（位置和大小）
+ * @param webview WebView 指针
+ * @param out_x 输出 X 坐标
+ * @param out_y 输出 Y 坐标
+ * @param out_width 输出宽度
+ * @param out_height 输出高度
+ * @return 错误代码
+ */
+WryResult wry_webview_bounds(
+    WryWebView* webview,
+    double* out_x,
+    double* out_y,
+    double* out_width,
+    double* out_height
+);
 
 /**
  * 设置 WebView 边界（位置和大小）
  * 仅对使用 build_as_child 创建的 WebView 有效
+ * @param webview WebView 指针
+ * @param x X 坐标
+ * @param y Y 坐标
+ * @param width 宽度
+ * @param height 高度
+ * @return 错误代码
  */
-WryResult wry_webview_set_bounds(WryWebView* webview, const WryRect* bounds);
+WryResult wry_webview_set_bounds(
+    WryWebView* webview,
+    double x,
+    double y,
+    double width,
+    double height
+);
+
+/**
+ * 设置 WebView 背景色
+ * @param webview WebView 指针
+ * @param red 红色分量 (0-255)
+ * @param green 绿色分量 (0-255)
+ * @param blue 蓝色分量 (0-255)
+ * @param alpha 透明度分量 (0-255)
+ * @return 错误代码
+ */
+WryResult wry_webview_set_background_color(
+    WryWebView* webview,
+    unsigned char red,
+    unsigned char green,
+    unsigned char blue,
+    unsigned char alpha
+);
+
+/**
+ * HTTP 请求头结构
+ */
+typedef struct {
+    const char* key;
+    const char* value;
+} WryHeader;
+
+/**
+ * 加载 URL 并带自定义 HTTP 请求头
+ * @param webview WebView 指针
+ * @param url 要加载的 URL
+ * @param headers 请求头数组
+ * @param headers_count 请求头数量
+ * @return 错误代码
+ */
+WryResult wry_webview_load_url_with_headers(
+    WryWebView* webview,
+    const char* url,
+    const WryHeader* headers,
+    size_t headers_count
+);
+
+/**
+ * 清除所有浏览数据（缓存、cookies 等）
+ * @param webview WebView 指针
+ * @return 错误代码
+ */
+WryResult wry_webview_clear_all_browsing_data(WryWebView* webview);
+
+/**
+ * 将焦点从 WebView 转移到父窗口
+ * @param webview WebView 指针
+ * @return 错误代码
+ */
+WryResult wry_webview_focus_parent(WryWebView* webview);
 
 /* =============== Cookie API =============== */
 

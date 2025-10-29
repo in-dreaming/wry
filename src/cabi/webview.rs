@@ -50,7 +50,7 @@ pub extern "C" fn wry_webview_id(
 
 /// C API: 获取当前 URL
 #[no_mangle]
-pub extern "C" fn wry_webview_url(webview: *const WryWebView, out_url: *mut *mut c_char) -> WryResult {
+pub extern "C" fn wry_webview_url(webview: *mut WryWebView, out_url: *mut *mut c_char) -> WryResult {
     if webview.is_null() {
         set_error_message("webview pointer is null");
         return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;

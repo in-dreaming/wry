@@ -138,13 +138,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             if (g_app_state.webview) {
                 RECT client_rect;
                 GetClientRect(hwnd, &client_rect);
-                WryRect bounds = {
+                wry_webview_set_bounds(&g_app_state.webview,
                     0,
                     0,
                     (double)(client_rect.right - client_rect.left),
-                    (double)(client_rect.bottom - client_rect.top)
-                };
-                wry_webview_set_bounds(g_app_state.webview, &bounds);
+                    (double)(client_rect.bottom - client_rect.top));
             }
             return 0;
             
@@ -171,7 +169,7 @@ void on_ipc_message(const char* message, size_t len, void* userdata) {
         // Execute JavaScript to update the output
         const char* js_code = "document.getElementById('output').textContent += 'Protocol handler executed!\\n';";
         if (g_app_state.webview) {
-            wry_webview_eval(g_app_state.webview, js_code);
+            wry_webview_eval(&g_app_state.webview, js_code);
         }
     }
 }
@@ -272,7 +270,9 @@ int main() {
         (double)(client_rect.right - client_rect.left),
         (double)(client_rect.bottom - client_rect.top)
     };
-    wry_webview_set_bounds(webview, &bounds);
+    wry_webview_set_bounds(&webview, 0, 0,
+        (double)(client_rect.right - client_rect.left),
+        (double)(client_rect.bottom - client_rect.top));
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

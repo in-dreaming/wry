@@ -71,11 +71,90 @@ pub extern "C" fn wry_string_free(ptr: *mut c_char) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::ffi::CStr;
     
     #[test]
     fn test_version() {
         let version = unsafe { CStr::from_ptr(wry_version()) };
         assert!(!version.to_str().unwrap().is_empty());
+    }
+    
+    #[test]
+    fn test_builder_creation() {
+        let builder = builder::wry_builder_new();
+        assert!(!builder.is_null(), "Builder should not be null");
+        builder::wry_builder_destroy(builder);
+    }
+
+    #[test]
+    fn test_builder_with_url() {
+        let builder = builder::wry_builder_new();
+        assert!(!builder.is_null());
+
+        let url = CString::new("https://example.com").unwrap();
+        let result = builder::wry_builder_with_url(builder, url.as_ptr());
+        assert_eq!(result, error::WryErrorCode::WRY_OK);
+
+        builder::wry_builder_destroy(builder);
+    }
+
+    #[test]
+    fn test_builder_with_html() {
+        let builder = builder::wry_builder_new();
+        assert!(!builder.is_null());
+
+        let html = CString::new("<html><body>Test</body></html>").unwrap();
+        let result = builder::wry_builder_with_html(builder, html.as_ptr());
+        assert_eq!(result, error::WryErrorCode::WRY_OK);
+
+        builder::wry_builder_destroy(builder);
+    }
+
+    #[test]
+    fn test_builder_with_bounds() {
+        let builder = builder::wry_builder_new();
+        assert!(!builder.is_null());
+
+        let result = builder::wry_builder_with_bounds(builder, 100.0, 100.0, 800.0, 600.0);
+        assert_eq!(result, error::WryErrorCode::WRY_OK);
+
+        builder::wry_builder_destroy(builder);
+    }
+
+    #[test]
+    fn test_builder_null_checks() {
+        let url = CString::new("https://example.com").unwrap();
+        let result = builder::wry_builder_with_url(std::ptr::null_mut(), url.as_ptr());
+        assert_ne!(result, error::WryErrorCode::WRY_OK);
+    }
+
+    #[test]
+    fn test_types_header() {
+        let key = CString::new("Authorization").unwrap();
+        let value = CString::new("Bearer token").unwrap();
+
+        let header = types::WryHeader {
+            key: key.as_ptr(),
+            value: value.as_ptr(),
+        };
+
+        assert_eq!(unsafe { CStr::from_ptr(header.key).to_string_lossy() }, "Authorization");
+        assert_eq!(unsafe { CStr::from_ptr(header.value).to_string_lossy() }, "Bearer token");
+    }
+
+    #[test]
+    fn test_types_rect() {
+        let rect = types::WryRect {
+            x: 100.0,
+            y: 200.0,
+            width: 800.0,
+            height: 600.0,
+        };
+
+        assert_eq!(rect.x, 100.0);
+        assert_eq!(rect.y, 200.0);
+        assert_eq!(rect.width, 800.0);
+        assert_eq!(rect.height, 600.0);
     }
 }
 

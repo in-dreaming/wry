@@ -43,7 +43,7 @@ void update_webview_bounds(HWND hwnd) {
     int half_width = window_width / 2;
     int half_height = window_height / 2;
     
-    WryRect bounds[4] = {
+    double bounds[4][4] = {
         {0, 0, half_width, half_height},
         {half_width, 0, half_width, half_height},
         {0, half_height, half_width, half_height},
@@ -52,7 +52,9 @@ void update_webview_bounds(HWND hwnd) {
     
     for (int i = 0; i < g_app_state.webview_count; i++) {
         if (g_app_state.webviews[i].webview) {
-            wry_webview_set_bounds(g_app_state.webviews[i].webview, &bounds[i]);
+            wry_webview_set_bounds(&g_app_state.webviews[i].webview, 
+                                   bounds[i][0], bounds[i][1], 
+                                   bounds[i][2], bounds[i][3]);
         }
     }
 }

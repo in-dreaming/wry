@@ -62,6 +62,13 @@ pub struct WryProxyConfig {
     pub endpoint: WryProxyEndpoint,
 }
 
+/// HTTP Header 结构
+#[repr(C)]
+pub struct WryHeader {
+    pub key: *const c_char,
+    pub value: *const c_char,
+}
+
 impl From<crate::Rect> for WryRect {
     fn from(rect: crate::Rect) -> Self {
         use crate::dpi;

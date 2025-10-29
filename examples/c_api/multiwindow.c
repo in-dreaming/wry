@@ -204,7 +204,7 @@ void create_webview_for_window(WindowInfo* win_info) {
     };
     printf("[WEBVIEW] Bounds: x=0, y=0, width=%f, height=%f\n", bounds.width, bounds.height);
     fflush(stdout);
-    wry_webview_set_bounds(webview, &bounds);
+    wry_webview_set_bounds(&webview, bounds.x, bounds.y, bounds.width, bounds.height);
     
     printf("[WEBVIEW] Window %d is now visible\n\n", win_info->window_number);
     fflush(stdout);
@@ -266,13 +266,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             if (win_info && win_info->webview) {
                 RECT client_rect;
                 GetClientRect(hwnd, &client_rect);
-                WryRect bounds = {
-                    0,
-                    0,
+                wry_webview_set_bounds(&win_info->webview, 0, 0,
                     (double)(client_rect.right - client_rect.left),
-                    (double)(client_rect.bottom - client_rect.top)
-                };
-                wry_webview_set_bounds(win_info->webview, &bounds);
+                    (double)(client_rect.bottom - client_rect.top));
             }
             return 0;
             
