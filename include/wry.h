@@ -285,6 +285,69 @@ int wry_webview_is_devtools_open(const WryWebView* webview);
  */
 WryResult wry_webview_set_bounds(WryWebView* webview, const WryRect* bounds);
 
+/* =============== Cookie API =============== */
+
+/**
+ * Cookie 结构
+ */
+typedef struct {
+    char* name;
+    char* value;
+    char* domain;
+    char* path;
+} WryCookie;
+
+/**
+ * 获取所有 cookies
+ * @param webview WebView 指针
+ * @param out_cookies 输出 cookies 数组指针
+ * @param out_count 输出 cookies 数量
+ * @return 错误代码
+ */
+WryResult wry_webview_cookies(
+    const WryWebView* webview,
+    WryCookie** out_cookies,
+    size_t* out_count
+);
+
+/**
+ * 释放单个 cookie
+ */
+void wry_cookie_free(WryCookie* cookie);
+
+/**
+ * 释放 cookies 数组
+ */
+void wry_cookies_free(WryCookie* cookies, size_t count);
+
+/**
+ * 设置 Cookie
+ * @param webview WebView 指针
+ * @param name Cookie 名称
+ * @param value Cookie 值
+ * @param domain Cookie 域名（可以为 NULL）
+ * @param path Cookie 路径（可以为 NULL）
+ * @return 错误代码
+ */
+WryResult wry_webview_set_cookie(
+    WryWebView* webview,
+    const char* name,
+    const char* value,
+    const char* domain,
+    const char* path
+);
+
+/**
+ * 删除 Cookie
+ * @param webview WebView 指针
+ * @param name Cookie 名称
+ * @return 错误代码
+ */
+WryResult wry_webview_delete_cookie(
+    WryWebView* webview,
+    const char* name
+);
+
 #ifdef __cplusplus
 }
 #endif

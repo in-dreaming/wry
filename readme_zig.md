@@ -1,3 +1,5 @@
+新增了wry的cabi实现，且使用zig build
+
 # 使用 Zig 构建系统（推荐）
 zig build -Dcabi=true         # 构建库和 C ABI
 zig build build-examples      # 构建 C 示例

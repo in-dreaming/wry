@@ -1,63 +1,120 @@
 /**
- * Simple example using Wry C API
+ * Simple WebView Example - C API
  * 
- * This example demonstrates basic WebView creation and usage
+ * This is the simplest example showing how to create a WebView
+ * that loads a URL from the internet.
+ * 
+ * Compile: zig cc -o simple.exe simple.c -I../../include -L../../target/debug -lwry
+ * Run: simple.exe
  */
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <windows.h>
 #include "wry.h"
 
-// IPC callback
-void on_ipc_message(const char* message, size_t len, void* userdata) {
-    (void)userdata;
-    printf("IPC message received: %.*s\n", (int)len, message);
-}
+#define WINDOW_WIDTH 800
+#define WINDOW_HEIGHT 600
 
-// Navigation callback (must return int per header)
-int on_navigation(const char* url, void* userdata) {
-    (void)userdata;
-    printf("Navigating to: %s\n", url);
-    return 1; // non-zero to allow navigation
+LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    switch (uMsg) {
+        case WM_CLOSE:
+            PostQuitMessage(0);
+            return 0;
+        case WM_DESTROY:
+            PostQuitMessage(0);
+            return 0;
+        default:
+            return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+    }
 }
 
 int main() {
-    printf("Wry C API Example\n");
-    printf("Version: %s\n", wry_version());
+    printf("=== Wry Simple WebView Example ===\n");
+    printf("Version: %s\n\n", wry_version());
     
-    // Initialize (required on Linux)
     if (wry_init() != WRY_OK) {
-        fprintf(stderr, "Failed to initialize Wry\n");
+        printf("ERROR: Failed to initialize Wry\n");
         return 1;
     }
+    printf("OK: Wry initialized\n");
     
-    // Create a WebView builder
+    const wchar_t CLASS_NAME[] = L"WrySimpleClass";
+    
+    WNDCLASSW wc = {0};
+    wc.lpfnWndProc = WindowProc;
+    wc.lpszClassName = CLASS_NAME;
+    wc.hCursor = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
+    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    
+    if (!RegisterClassW(&wc)) {
+        printf("ERROR: Failed to register window class\n");
+        return 1;
+    }
+    printf("OK: Window class registered\n");
+    
+    HWND hwnd = CreateWindowExW(
+        0, CLASS_NAME, L"Wry Simple WebView",
+        WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT, CW_USEDEFAULT,
+        WINDOW_WIDTH, WINDOW_HEIGHT,
+        NULL, NULL, NULL, NULL
+    );
+    
+    if (!hwnd) {
+        printf("ERROR: Failed to create window\n");
+        return 1;
+    }
+    printf("OK: Window created\n");
+    
+    ShowWindow(hwnd, SW_SHOW);
+    UpdateWindow(hwnd);
+    printf("OK: Window shown\n\n");
+    
+    // Create WebView
+    printf("Creating WebView...\n");
     WryWebViewBuilder* builder = wry_builder_new();
     if (!builder) {
-        fprintf(stderr, "Failed to create builder\n");
+        printf("ERROR: Failed to create builder\n");
         return 1;
     }
     
-    // Configure builder
-    wry_builder_with_url(builder, "https://www.rust-lang.org");
+    // Set URL to load
+    if (wry_builder_with_url(builder, "https://tauri.app") != WRY_OK) {
+        printf("ERROR: Failed to set URL: %s\n", wry_last_error_message());
+        wry_builder_destroy(builder);
+        return 1;
+    }
+    
+    // Enable developer tools
     wry_builder_with_devtools(builder, 1);
     wry_builder_with_visible(builder, 1);
     
-    // Set IPC handler
-    wry_builder_with_ipc_handler(builder, on_ipc_message, NULL);
+    // Build WebView as child of window
+    WryWebView* webview = wry_builder_build_as_child(builder, (void*)hwnd);
+    if (!webview) {
+        printf("ERROR: Failed to build WebView: %s\n", wry_last_error_message());
+        wry_builder_destroy(builder);
+        return 1;
+    }
     
-    // Set navigation handler
-    wry_builder_with_navigation_handler(builder, on_navigation, NULL);
+    printf("OK: WebView created successfully\n");
+    printf("Loading: https://tauri.app\n\n");
+    printf("Window is ready. Close the window to exit.\n");
     
-    // Note: In a real application, you would need to provide a window handle
-    // For this example, we'll just demonstrate the API
+    // Message loop
+    MSG msg = {0};
+    while (GetMessageW(&msg, NULL, 0, 0)) {
+        TranslateMessage(&msg);
+        DispatchMessageW(&msg);
+    }
     
-    // Clean up
-    wry_builder_destroy(builder);
+    printf("\nCleaning up...\n");
+    if (webview) {
+        wry_webview_destroy(webview);
+        printf("OK: WebView destroyed\n");
+    }
     
-    printf("Example completed successfully\n");
+    printf("Done!\n");
     return 0;
 }
-
-

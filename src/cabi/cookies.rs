@@ -83,4 +83,81 @@ pub extern "C" fn wry_cookies_free(cookies: *mut WryCookie, count: usize) {
     }
 }
 
+/// C API: 设置 Cookie
+#[no_mangle]
+pub extern "C" fn wry_webview_set_cookie(
+    webview: WryWebView,
+    name: *const std::os::raw::c_char,
+    value: *const std::os::raw::c_char,
+    domain: *const std::os::raw::c_char,
+    path: *const std::os::raw::c_char,
+) -> WryResult {
+    if webview.is_null() || name.is_null() || value.is_null() {
+        set_error_message("Invalid argument");
+        return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
+    }
+    
+    unsafe {
+        let name_str = std::ffi::CStr::from_ptr(name).to_string_lossy().into_owned();
+        let value_str = std::ffi::CStr::from_ptr(value).to_string_lossy().into_owned();
+        let domain_str = if !domain.is_null() {
+            std::ffi::CStr::from_ptr(domain).to_string_lossy().into_owned()
+        } else {
+            String::new()
+        };
+        let path_str = if !path.is_null() {
+            std::ffi::CStr::from_ptr(path).to_string_lossy().into_owned()
+        } else {
+            String::new()
+        };
+        
+        let mut cookie_builder = cookie::Cookie::build((name_str.clone(), value_str.clone()));
+        
+        if !domain_str.is_empty() {
+            cookie_builder = cookie_builder.domain(domain_str.clone());
+        }
+        
+        if !path_str.is_empty() {
+            cookie_builder = cookie_builder.path(path_str.clone());
+        }
+        
+        let cookie = cookie_builder.build();
+        let webview_ref = &*webview;
+        
+        match webview_ref.set_cookie(&cookie) {
+            Ok(_) => WryErrorCode::WRY_OK,
+            Err(err) => {
+                set_last_error(err);
+                WryErrorCode::WRY_ERROR_GENERIC
+            }
+        }
+    }
+}
+
+/// C API: 删除 Cookie
+#[no_mangle]
+pub extern "C" fn wry_webview_delete_cookie(
+    webview: WryWebView,
+    name: *const std::os::raw::c_char,
+) -> WryResult {
+    if webview.is_null() || name.is_null() {
+        set_error_message("Invalid argument");
+        return WryErrorCode::WRY_ERROR_INVALID_ARGUMENT;
+    }
+    
+    unsafe {
+        let name_str = std::ffi::CStr::from_ptr(name).to_string_lossy().into_owned();
+        let cookie_obj = cookie::Cookie::build((name_str.clone(), String::new())).build();
+        let webview_ref = &*webview;
+        
+        match webview_ref.delete_cookie(&cookie_obj) {
+            Ok(_) => WryErrorCode::WRY_OK,
+            Err(err) => {
+                set_last_error(err);
+                WryErrorCode::WRY_ERROR_GENERIC
+            }
+        }
+    }
+}
+
 

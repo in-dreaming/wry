@@ -142,6 +142,36 @@ pub fn build(b: *std.Build) void {
         if (dll_install_step) |s| multiwebview_urls_exe.step.dependOn(s);
         b.installArtifact(multiwebview_urls_exe);
 
+        // async_custom_protocol.c 示例
+        const async_protocol_exe = b.addExecutable(.{
+            .name = "async_custom_protocol",
+            .target = target,
+            .optimize = optimize,
+        });
+        async_protocol_exe.addCSourceFile(.{ .file = .{ .cwd_relative = "examples/c_api/async_custom_protocol.c" }, .flags = &.{ "-std=c11", "-Wall", "-Wextra" } });
+        async_protocol_exe.linkLibC();
+        async_protocol_exe.addIncludePath(.{ .cwd_relative = "include" });
+        async_protocol_exe.addLibraryPath(.{ .cwd_relative = "target/debug" });
+        async_protocol_exe.linkSystemLibrary("wry");
+        async_protocol_exe.step.dependOn(&build_rust_dep.step);
+        if (dll_install_step) |s| async_protocol_exe.step.dependOn(s);
+        b.installArtifact(async_protocol_exe);
+
+        // multiwindow.c 示例
+        const multiwindow_exe = b.addExecutable(.{
+            .name = "multiwindow",
+            .target = target,
+            .optimize = optimize,
+        });
+        multiwindow_exe.addCSourceFile(.{ .file = .{ .cwd_relative = "examples/c_api/multiwindow.c" }, .flags = &.{ "-std=c11", "-Wall", "-Wextra" } });
+        multiwindow_exe.linkLibC();
+        multiwindow_exe.addIncludePath(.{ .cwd_relative = "include" });
+        multiwindow_exe.addLibraryPath(.{ .cwd_relative = "target/debug" });
+        multiwindow_exe.linkSystemLibrary("wry");
+        multiwindow_exe.step.dependOn(&build_rust_dep.step);
+        if (dll_install_step) |s| multiwindow_exe.step.dependOn(s);
+        b.installArtifact(multiwindow_exe);
+
         // 添加构建示例的步骤
         const examples_step = b.step("build-examples", "Build C API examples");
         examples_step.dependOn(&simple_exe.step);
@@ -150,6 +180,8 @@ pub fn build(b: *std.Build) void {
         examples_step.dependOn(&full_exe.step);
         examples_step.dependOn(&multiwebview_exe.step);
         examples_step.dependOn(&multiwebview_urls_exe.step);
+        examples_step.dependOn(&async_protocol_exe.step);
+        examples_step.dependOn(&multiwindow_exe.step);
 
         // 运行示例的步骤
         const run_simple = b.addRunArtifact(simple_exe);
@@ -158,6 +190,8 @@ pub fn build(b: *std.Build) void {
         const run_full = b.addRunArtifact(full_exe);
         const run_multiwebview = b.addRunArtifact(multiwebview_exe);
         const run_multiwebview_urls = b.addRunArtifact(multiwebview_urls_exe);
+        const run_async_protocol = b.addRunArtifact(async_protocol_exe);
+        const run_multiwindow = b.addRunArtifact(multiwindow_exe);
 
         const run_step = b.step("run", "Run examples");
         run_step.dependOn(&run_simple.step);
@@ -166,6 +200,8 @@ pub fn build(b: *std.Build) void {
         run_step.dependOn(&run_full.step);
         run_step.dependOn(&run_multiwebview.step);
         run_step.dependOn(&run_multiwebview_urls.step);
+        run_step.dependOn(&run_async_protocol.step);
+        run_step.dependOn(&run_multiwindow.step);
     }
 
     // ========== 测试步骤 ==========
